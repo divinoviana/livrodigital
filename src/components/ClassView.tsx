@@ -1,18 +1,44 @@
 import { Class } from "../data/types";
-import { Target, Lightbulb, ClipboardList, MessageSquare, Clock } from "lucide-react";
-import { motion } from "motion/react";
+import { Target, Lightbulb, ClipboardList, MessageSquare, Clock, Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
+import { generateDeepDive } from "../services/aiService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ClassViewProps {
   aula: Class;
 }
 
 export default function ClassView({ aula }: ClassViewProps) {
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiContent, setAiContent] = useState<string | null>(null);
+  const [isAiExpanded, setIsAiExpanded] = useState(false);
+
+  const handleDeepDive = async () => {
+    if (aiContent) {
+      setIsAiExpanded(!isAiExpanded);
+      return;
+    }
+
+    setIsAiLoading(true);
+    setIsAiExpanded(true);
+    try {
+      const content = await generateDeepDive(aula.title, aula.theory.content);
+      setAiContent(content || "Não foi possível gerar o conteúdo no momento.");
+    } catch (error) {
+      setAiContent("Erro ao conectar com a inteligência artificial. Verifique sua conexão ou chave de API.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   return (
     <motion.div 
       key={aula.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto p-8 space-y-12"
+      className="max-w-4xl mx-auto p-8 space-y-12 pb-24"
     >
       <header className="space-y-4 border-b border-line/10 pb-8">
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] opacity-50">
@@ -36,10 +62,61 @@ export default function ClassView({ aula }: ClassViewProps) {
       </section>
 
       <section className="space-y-8">
-        <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
-          <Lightbulb size={18} className="text-ink/60" />
-          <span>Conteúdo Teórico</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
+            <Lightbulb size={18} className="text-ink/60" />
+            <span>Conteúdo Teórico</span>
+          </div>
+          
+          <button
+            onClick={handleDeepDive}
+            disabled={isAiLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-ink text-bg rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {isAiLoading ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Sparkles size={14} />
+            )}
+            {aiContent ? (isAiExpanded ? "Recolher IA" : "Ver Aprofundamento IA") : "Aprofundar com IA"}
+          </button>
         </div>
+
+        <AnimatePresence>
+          {isAiExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-ink/5 border border-ink/10 rounded-2xl p-8 mb-8 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Sparkles size={48} />
+                </div>
+                
+                <div className="flex items-center gap-2 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">
+                  <Sparkles size={12} />
+                  <span>Aprofundamento Gerado por IA</span>
+                </div>
+
+                {isAiLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-4">
+                    <Loader2 size={32} className="animate-spin opacity-20" />
+                    <p className="text-sm font-serif italic opacity-40">Expandindo horizontes filosóficos...</p>
+                  </div>
+                ) : (
+                  <div className="markdown-body prose prose-slate max-w-none prose-headings:font-serif prose-p:text-base prose-p:leading-relaxed">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {aiContent || ""}
+                    </ReactMarkdown>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="prose prose-slate max-w-none">
           <h3 className="text-2xl font-serif italic mb-4">{aula.theory.title}</h3>
           <p className="text-lg leading-relaxed opacity-80 mb-8">{aula.theory.content}</p>
