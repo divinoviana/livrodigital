@@ -1,11 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
-const aiKey = process.env.GEMINI_API_KEY;
-if (!aiKey) {
-  console.warn("GEMINI_API_KEY não encontrada no ambiente.");
-}
-
-const ai = new GoogleGenAI({ apiKey: aiKey || "" });
+const aiKey = process.env.GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey: aiKey });
 
 export const generateDeepDive = async (classTitle: string, theoryContent: string) => {
   try {
