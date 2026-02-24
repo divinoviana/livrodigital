@@ -1,7 +1,7 @@
 import { Class } from "../data/types";
 import { Target, Lightbulb, ClipboardList, MessageSquare, Clock, Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { generateDeepDive } from "../services/aiService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -14,6 +14,13 @@ export default function ClassView({ aula }: ClassViewProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiContent, setAiContent] = useState<string | null>(null);
   const [isAiExpanded, setIsAiExpanded] = useState(false);
+
+  // Reset state when class changes
+  useEffect(() => {
+    setAiContent(null);
+    setIsAiExpanded(false);
+    setIsAiLoading(false);
+  }, [aula.id]);
 
   const handleDeepDive = async () => {
     if (aiContent) {

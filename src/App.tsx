@@ -137,7 +137,7 @@ export default function App() {
 
         <div className="flex-1 overflow-y-auto scroll-smooth">
           {currentAula ? (
-            <ClassView aula={currentAula} />
+            <ClassView key={currentAula.id} aula={currentAula} />
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-8">
               <motion.div
