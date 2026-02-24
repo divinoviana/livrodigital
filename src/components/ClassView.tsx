@@ -8,16 +8,16 @@ import remarkGfm from "remark-gfm";
 
 interface ClassViewProps {
   aula: Class;
+  aiContent: string | null;
+  onUpdateAiContent: (content: string) => void;
 }
 
-export default function ClassView({ aula }: ClassViewProps) {
+export default function ClassView({ aula, aiContent, onUpdateAiContent }: ClassViewProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiContent, setAiContent] = useState<string | null>(null);
   const [isAiExpanded, setIsAiExpanded] = useState(false);
 
-  // Reset state when class changes
+  // Reset expansion when class changes
   useEffect(() => {
-    setAiContent(null);
     setIsAiExpanded(false);
     setIsAiLoading(false);
   }, [aula.id]);
@@ -32,9 +32,9 @@ export default function ClassView({ aula }: ClassViewProps) {
     setIsAiExpanded(true);
     try {
       const content = await generateDeepDive(aula.title, aula.theory.content);
-      setAiContent(content || "Não foi possível gerar o conteúdo no momento.");
+      onUpdateAiContent(content || "Não foi possível gerar o conteúdo no momento.");
     } catch (error) {
-      setAiContent("Erro ao conectar com a inteligência artificial. Verifique sua conexão ou chave de API.");
+      onUpdateAiContent("Erro ao conectar com a inteligência artificial. Verifique sua conexão ou chave de API.");
     } finally {
       setIsAiLoading(false);
     }

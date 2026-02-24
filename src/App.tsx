@@ -12,6 +12,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [bookData, setBookData] = useState<BookContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [aiContentCache, setAiContentCache] = useState<Record<string, string>>({});
 
   const [dataSource, setDataSource] = useState<"supabase" | "local" | null>(null);
 
@@ -47,6 +48,10 @@ export default function App() {
   const handleSelectClass = (s: number, b: number, c: number) => {
     setSelectedClass({ s, b, c });
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
+  };
+
+  const updateAiCache = (id: string, content: string) => {
+    setAiContentCache(prev => ({ ...prev, [id]: content }));
   };
 
   const currentAula = selectedClass && bookData
@@ -137,7 +142,12 @@ export default function App() {
 
         <div className="flex-1 overflow-y-auto scroll-smooth">
           {currentAula ? (
-            <ClassView key={currentAula.id} aula={currentAula} />
+            <ClassView 
+              key={currentAula.id} 
+              aula={currentAula} 
+              aiContent={aiContentCache[currentAula.id] || null}
+              onUpdateAiContent={(content) => updateAiCache(currentAula.id, content)}
+            />
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-8">
               <motion.div
